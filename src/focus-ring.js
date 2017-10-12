@@ -150,10 +150,13 @@ function init() {
   function addInitialPointerMoveListeners() {
     document.addEventListener('mousemove', onInitialPointerMove);
     document.addEventListener('mousedown', onInitialPointerMove);
+    document.addEventListener('mouseup', onInitialPointerMove);
     document.addEventListener('pointermove', onInitialPointerMove);
     document.addEventListener('pointerdown', onInitialPointerMove);
+    document.addEventListener('pointerup', onInitialPointerMove);
     document.addEventListener('touchmove', onInitialPointerMove);
     document.addEventListener('touchstart', onInitialPointerMove);
+    document.addEventListener('touchend', onInitialPointerMove);
   }
 
   /**
@@ -173,10 +176,13 @@ function init() {
     hadKeyboardEvent = false;
     document.removeEventListener('mousemove', onInitialPointerMove);
     document.removeEventListener('mousedown', onInitialPointerMove);
+    document.removeEventListener('mouseup', onInitialPointerMove);
     document.removeEventListener('pointermove', onInitialPointerMove);
     document.removeEventListener('pointerdown', onInitialPointerMove);
+    document.removeEventListener('pointerup', onInitialPointerMove);
     document.removeEventListener('touchmove', onInitialPointerMove);
     document.removeEventListener('touchstart', onInitialPointerMove);
+    document.removeEventListener('touchend', onInitialPointerMove);
   }
 
   document.addEventListener('keydown', onKeyDown, true);
