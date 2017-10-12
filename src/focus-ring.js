@@ -1,10 +1,8 @@
-import classList from 'dom-classlist';
-
 /**
  * https://github.com/WICG/focus-ring
  */
 function init() {
-  var hadKeyboardEvent = false;
+  var hadKeyboardEvent = true;
   var elWithFocusRing;
 
   var inputTypesWhitelist = {
@@ -52,9 +50,9 @@ function init() {
    * @param {Element} el
    */
   function addFocusRingClass(el) {
-    if (classList(el).contains('focus-ring'))
+    if (el.classList.contains('focus-ring'))
       return;
-    classList(el).add('focus-ring');
+    el.classList.add('focus-ring');
     el.setAttribute('data-focus-ring-added', '');
   }
 
@@ -66,7 +64,7 @@ function init() {
   function removeFocusRingClass(el) {
     if (!el.hasAttribute('data-focus-ring-added'))
       return;
-    classList(el).remove('focus-ring');
+    el.classList.remove('focus-ring');
     el.removeAttribute('data-focus-ring-added');
   }
 
@@ -118,6 +116,7 @@ function init() {
    * to which it was previously applied.
    */
   function onWindowFocus() {
+    window.removeEventListener('focus', onWindowFocus, true);
     if (document.activeElement == elWithFocusRing)
       addFocusRingClass(elWithFocusRing);
 
@@ -127,9 +126,15 @@ function init() {
   /**
    * When switching windows, keep track of the focused element if it has a
    * focus-ring class.
+   * @param {Event} e
    */
-  function onWindowBlur() {
-    if (classList(document.activeElement).contains('focus-ring')) {
+  function onWindowBlur(e) {
+    if (e.target !== window)
+      return;
+
+    window.addEventListener('focus', onWindowFocus, true);
+    addInitialPointerMoveListeners();
+    if (document.activeElement.classList.contains('focus-ring')) {
       // Keep a reference to the element to which the focus-ring class is applied
       // so the focus-ring class can be restored to it if the window regains
       // focus after being blurred.
@@ -137,13 +142,51 @@ function init() {
     }
   }
 
+  /**
+   * Add a group of listeners to detect a fine-grained pointing device.
+   * These listeners will be added when the polyfill first loads, and if
+   * the window is blurred and regains focus.
+   */
+  function addInitialPointerMoveListeners() {
+    document.addEventListener('mousemove', onInitialPointerMove);
+    document.addEventListener('mousedown', onInitialPointerMove);
+    document.addEventListener('pointermove', onInitialPointerMove);
+    document.addEventListener('pointerdown', onInitialPointerMove);
+    document.addEventListener('touchmove', onInitialPointerMove);
+    document.addEventListener('touchstart', onInitialPointerMove);
+  }
+
+  /**
+   * When the polfyill first loads, assume the user is in keyboard modality.
+   * If any event is received from a fine-grained pointing device (mouse, pointer, touch),
+   * turn off keyboard modality.
+   * This accounts for situations where focus enters the page from the URL bar.
+   * In that scenario the keydown event is inconsistent, so it's impossible to know if
+   * the user entered the page using Tab.
+   * @param {Event} e
+   */
+  function onInitialPointerMove(e) {
+    // Work around a Safari quirk that fires a mousemove on <html> whenever the window blurs.
+    if (e.target.nodeName.toLowerCase() === 'html')
+      return;
+
+    hadKeyboardEvent = false;
+    document.removeEventListener('mousemove', onInitialPointerMove);
+    document.removeEventListener('mousedown', onInitialPointerMove);
+    document.removeEventListener('pointermove', onInitialPointerMove);
+    document.removeEventListener('pointerdown', onInitialPointerMove);
+    document.removeEventListener('touchmove', onInitialPointerMove);
+    document.removeEventListener('touchstart', onInitialPointerMove);
+  }
+
   document.addEventListener('keydown', onKeyDown, true);
   document.addEventListener('focus', onFocus, true);
   document.addEventListener('blur', onBlur, true);
   window.addEventListener('focus', onWindowFocus, true);
   window.addEventListener('blur', onWindowBlur, true);
+  addInitialPointerMoveListeners();
 
-  classList(document.body).add('js-focus-ring');
+  document.body.classList.add('js-focus-ring');
 }
 
 /**

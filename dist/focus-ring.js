@@ -174,7 +174,7 @@ ClassList.prototype.toggle = function (token, force) {
  * https://github.com/WICG/focus-ring
  */
 function init() {
-  var hadKeyboardEvent = false;
+  var hadKeyboardEvent = true;
   var elWithFocusRing;
 
   var inputTypesWhitelist = {
@@ -192,6 +192,24 @@ function init() {
     'datetime': true,
     'datetime-local': true,
   };
+
+  document.addEventListener('mousemove', onInitialPointerMove);
+  document.addEventListener('pointermove', onInitialPointerMove);
+  document.addEventListener('touchstart', onInitialPointerMove);
+
+  /**
+   * When the polfyill first loads, assume the user is in keyboard modality.
+   * If any event is received from a fine-grained pointing device (mouse, pointer, touch),
+   * turn off keyboard modality.
+   * @param {Event} e 
+   */
+  function onInitialPointerMove(e) {
+    console.log('onInitialPointerMove');
+    hadKeyboardEvent = false;
+    document.removeEventListener('mousemove', onInitialPointerMove);
+    document.removeEventListener('pointermove', onInitialPointerMove);
+    document.removeEventListener('touchstart', onInitialPointerMove);
+  }
 
   /**
    * Computes whether the given element should automatically trigger the
