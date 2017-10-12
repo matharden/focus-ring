@@ -164,12 +164,14 @@ function init() {
    * If any event is received from a fine-grained pointing device (mouse, pointer, touch),
    * turn off keyboard modality.
    * This accounts for situations where focus enters the page from the URL bar.
-   * In that scenario the keydown event is inconsistent, so it's impossible to know if
-   * the user entered the page using Tab.
+   * In that scenario, the keydown event is inconsistent, so we can't use it to detect modality.
+   * But the odds are pretty good we'll get one of the other pointing device events
+   * and any of them should act as a signal that this is not keyboard focus.
    * @param {Event} e
    */
   function onInitialPointerMove(e) {
-    // Work around a Safari quirk that fires a mousemove on <html> whenever the window blurs.
+    // Work around a Safari quirk that fires a mousemove on <html> whenever the window blurs,
+    // even if you're tabbing out of the page. ¯\_(ツ)_/¯
     if (e.target.nodeName.toLowerCase() === 'html')
       return;
 
